@@ -3,7 +3,7 @@ import pandas as pd
 from pathlib import Path
 
 # Ruta raíz de resultados
-base_path = Path("/media/server/a77f75fe-fd07-402e-84d7-a7341c29141c/fertorres/dnds/paulina/1_TRANSLATORX/1_RESULTADO/NT_ALI_SIN_CODON_STOP/nuevo_phylip/resultados_clados")
+base_path = Path("../resultados_clados")
 
 results = []
 
