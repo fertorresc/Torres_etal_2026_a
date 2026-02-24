@@ -30,15 +30,9 @@ This GitHub repository contains scripts, parameters, metadata, and figure-genera
 
 ## Repository structure
 
-metadata/        sample information  
-assembly/        genome assembly and QC scripts  
-annotation/      RNA-assisted annotation scripts  
-phylogenomics/   orthology, alignments, StarBEAST2, discordance  
-selection/       codeml runs and LRT tests  
-dils/            demographic modelling scripts  
-psmc/            pseudo-diploid construction and PSMC  
-abba_baba/       Dsuite analyses  
-figures/         scripts for manuscript figures  
+XXXX/        XXX  
+Scripts/        script for orthology, codeml runs, LRT test, monophyly  
+Dils/            demographic modelling parameters  
 data_links.md    links to external data repositories  
 
 ---
