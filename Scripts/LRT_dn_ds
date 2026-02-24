@@ -1,0 +1,101 @@
+import pandas as pd
+import numpy as np
+from scipy.stats import chi2
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
+
+# Configuración general
+sns.set(style="whitegrid")
+
+# Rutas de entrada
+ruta_nulo = "/media/server/a77f75fe-fd07-402e-84d7-a7341c29141c/fertorres/dnds/paulina/1_TRANSLATORX/1_RESULTADO/NT_ALI_SIN_CODON_STOP/nuevo_phylip/resultados_clados_nulo/NULO_resumen_clade_model_completo.tsv"
+ruta_alt = "/media/server/a77f75fe-fd07-402e-84d7-a7341c29141c/fertorres/dnds/paulina/1_TRANSLATORX/1_RESULTADO/NT_ALI_SIN_CODON_STOP/nuevo_phylip/resultados_clados/resumen_clade_model_completo.tsv"
+
+# Leer archivos
+df_nulo = pd.read_csv(ruta_nulo, sep="\t")
+df_alt = pd.read_csv(ruta_alt, sep="\t")
+
+# Merge por 'gen'
+df = pd.merge(df_alt, df_nulo, on="gen", suffixes=("_alt", "_nulo"))
+
+# 🧪 Filtrar genes con omega confiables (<10) en class2
+omega_cols_alt = ["w_b0_class2_alt", "w_b1_class2_alt", "w_b2_class2_alt", "w_b3_class2_alt"]
+missing_cols = [col for col in omega_cols_alt if col not in df.columns]
+if missing_cols:
+    raise ValueError(f"Faltan columnas en el archivo: {missing_cols}")
+
+# Aplicar filtro y guardar excluidos
+filtro_omega = (df[omega_cols_alt] < 10).all(axis=1)
+df_filtrado = df[filtro_omega].copy()
+df_excluidos = df[~filtro_omega].copy()
+df_excluidos.to_csv("genes_excluidos_por_omega_ge10.tsv", sep="\t", index=False)
+
+# Calcular LRT y p-valor
+df_filtrado["LRT"] = 2 * (df_filtrado["lnL_alt"] - df_filtrado["lnL_nulo"])
+df_filtrado["df"] = df_filtrado["np_alt"] - df_filtrado["np_nulo"]
+df_filtrado["pval"] = chi2.sf(df_filtrado["LRT"], df_filtrado["df"])
+
+# Corrección FDR Benjamini-Hochberg con clasificación flexible
+df_filtrado["rank"] = df_filtrado["pval"].rank(method="min")
+m = len(df_filtrado)
+df_filtrado["FDR"] = (df_filtrado["pval"] * m / df_filtrado["rank"]).clip(upper=1.0)
+
+# Clasificación por categorías
+df_filtrado["categoria"] = "no significativo"
+df_filtrado.loc[df_filtrado["FDR"] < 0.05, "categoria"] = "significativo"
+df_filtrado.loc[(df_filtrado["FDR"] >= 0.05) & (df_filtrado["FDR"] < 0.2), "categoria"] = "candidato"
+
+# Guardar tabla completa y por categoría
+df_filtrado.to_csv("LRT_resultados_modelo_clade.tsv", sep="\t", index=False)
+df_filtrado[df_filtrado["categoria"] == "significativo"].to_csv("genes_significativos_FDR05.tsv", sep="\t", index=False)
+df_filtrado[df_filtrado["categoria"] == "candidato"].to_csv("genes_candidatos_FDR20.tsv", sep="\t", index=False)
+
+# Crear carpeta de gráficos
+os.makedirs("graficos_LRT", exist_ok=True)
+
+# Histograma de p-valores
+plt.figure(figsize=(8, 5))
+sns.histplot(df_filtrado["pval"], bins=50, kde=False)
+plt.title("Distribución de p-valores (modelo clade vs nulo)")
+plt.xlabel("p-valor")
+plt.ylabel("Número de genes")
+plt.tight_layout()
+plt.savefig("graficos_LRT/histograma_pvalores.png", dpi=300)
+plt.close()
+
+# Volcano plot con categoría
+df_filtrado["log_pval"] = -np.log10(df_filtrado["pval"])
+palette = {"significativo": "red", "candidato": "orange", "no significativo": "gray"}
+
+plt.figure(figsize=(8, 6))
+sns.scatterplot(data=df_filtrado, x="LRT", y="log_pval", hue="categoria", palette=palette, alpha=0.7)
+plt.axhline(-np.log10(0.05), color="blue", linestyle="--", label="p = 0.05")
+plt.title("Volcano plot - Clade Model C vs Nulo")
+plt.xlabel("LRT")
+plt.ylabel("-log10(p-valor)")
+plt.legend()
+plt.tight_layout()
+plt.savefig("graficos_LRT/volcano_plot_LRT.png", dpi=300)
+plt.close()
+
+# 📊 Gráfico adicional: distribución de omega (class2) en genes excluidos
+df_long = df_excluidos.melt(id_vars="gen", value_vars=omega_cols_alt,
+                            var_name="clado_class2", value_name="omega")
+df_long["clado"] = df_long["clado_class2"].str.extract(r"w_(b\d)_class2_alt")
+
+plt.figure(figsize=(10, 6))
+sns.boxplot(data=df_long, x="clado", y="omega", color="lightcoral")
+plt.title("Distribución de omega (class2) en genes excluidos por omega ≥ 10")
+plt.ylabel("ω (dN/dS)")
+plt.xlabel("Clado")
+plt.tight_layout()
+plt.savefig("graficos_LRT/omega_excluidos_boxplot.png", dpi=300)
+plt.close()
+
+# 📋 Resumen final
+print(f"Genes totales antes del filtro: {len(df)}")
+print(f"Genes después del filtro (omega < 10 en class2): {len(df_filtrado)}")
+print(f"Genes excluidos por tener omega ≥ 10 en alguna rama class2: {len(df_excluidos)}")
+print(f"Genes significativos (FDR < 0.05): {sum(df_filtrado['categoria'] == 'significativo')}")
+print(f"Genes candidatos (FDR entre 0.05 y 0.2): {sum(df_filtrado['categoria'] == 'candidato')}")
