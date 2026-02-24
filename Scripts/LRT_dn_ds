@@ -9,8 +9,8 @@ import os
 sns.set(style="whitegrid")
 
 # Rutas de entrada
-ruta_nulo = "/media/server/a77f75fe-fd07-402e-84d7-a7341c29141c/fertorres/dnds/paulina/1_TRANSLATORX/1_RESULTADO/NT_ALI_SIN_CODON_STOP/nuevo_phylip/resultados_clados_nulo/NULO_resumen_clade_model_completo.tsv"
-ruta_alt = "/media/server/a77f75fe-fd07-402e-84d7-a7341c29141c/fertorres/dnds/paulina/1_TRANSLATORX/1_RESULTADO/NT_ALI_SIN_CODON_STOP/nuevo_phylip/resultados_clados/resumen_clade_model_completo.tsv"
+ruta_nulo = "...NULO_resumen_clade_model_completo.tsv"
+ruta_alt = ".../resumen_clade_model_completo.tsv"
 
 # Leer archivos
 df_nulo = pd.read_csv(ruta_nulo, sep="\t")
