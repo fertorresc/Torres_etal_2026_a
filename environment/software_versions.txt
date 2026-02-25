@@ -13,7 +13,6 @@ BWA v0.7.18
 SPAdes v4.4.0
 
 # --- Contamination filtering / repeats ---
-BlobTools v1.1.1
 RepeatScout v1.0.5
 RepeatMasker v4.0.9
 
@@ -29,9 +28,9 @@ CD-HIT v4.8.1
 BRAKER v3.0.8
 
 # --- Orthology & alignments ---
-OrthoFinder v2.x (exact version not specified)
+OrthoFinder v2
 MAFFT v7.271
-BMGE v1.x (exact version not specified)
+BMGE v1
 
 # --- Bayesian phylogenetics ---
 BEAST2 / StarBEAST2 v2.7.6
@@ -48,7 +47,7 @@ phypartspiecharts.py (https://github.com/mossmatters/phyloscripts)
 monophyly.R (https://github.com/tomas-fer/scripts)
 
 # --- Selection analyses ---
-PAML (codeml) v4.x
+PAML (codeml) v4
 
 # --- Demographic inference ---
 DILS pipeline (Fraïsse et al. 2021, version as distributed by authors)
